@@ -1,0 +1,39 @@
+Imports System.Web
+
+Public Class ContentModificationModule
+    Implements IHttpModule
+
+    Public Sub Init(context As HttpApplication) Implements IHttpModule.Init
+        AddHandler context.BeginRequest, AddressOf OnBeginRequest
+        AddHandler context.EndRequest, AddressOf OnEndRequest
+    End Sub
+
+    Private Sub OnBeginRequest(sender As Object, e As EventArgs)
+        ' Logic before the request is processed (if needed)
+    End Sub
+
+    Private Sub OnEndRequest(sender As Object, e As EventArgs)
+        Dim app As HttpApplication = CType(sender, HttpApplication)
+        Dim context As HttpContext = app.Context
+
+        ' Check if the response content is a text/html type
+        If context.Response.ContentType = "text/html" Then
+            Dim originalContent As String = Nothing
+            Dim reader As New StreamReader(context.Response.Filter)
+            originalContent = reader.ReadToEnd()
+            context.Response.Filter.Close()
+
+            ' Modify the content
+            Dim modifiedContent As String = $"{originalContent}<br /><!-- This content has been modified -->"
+
+            ' Write the modified content back to the response
+            context.Response.Clear()
+            context.Response.Write(modifiedContent)
+            context.Response.ContentType = "text/html"
+        End If
+    End Sub
+
+    Public Sub Dispose() Implements IHttpModule.Dispose
+        ' Clean up resources here if needed
+    End Sub
+End Class
