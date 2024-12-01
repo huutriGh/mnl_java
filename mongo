@@ -1,0 +1,31 @@
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+
+@Service
+public class MyService {
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    public void findAndUpdateDocument(String id, String newFieldValue) {
+        // Build query criteria to find the document
+        Query query = new Query(Criteria.where("id").is(id));
+
+        // Create an update operation
+        Update update = new Update().set("fieldName", newFieldValue);
+
+        // Perform find and modify operation
+        MyDocument updatedDoc = mongoTemplate.findAndModify(
+            query,
+            update,
+            FindAndModifyOptions.options().returnNew(true),  // Return the updated document
+            MyDocument.class
+        );
+
+        // Do something with the updated document (optional)
+        System.out.println(updatedDoc);
+    }
+}
