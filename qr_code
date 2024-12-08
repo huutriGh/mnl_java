@@ -1,0 +1,75 @@
+1. Tổng quan về hệ thống
+Hệ thống bao gồm các thành phần chính:
+
+Microservice Quản lý Phí Bảo Hiểm: Quản lý các khoản phí bảo hiểm của khách hàng.
+Microservice Tạo Liên Kết Thanh Toán (Payment Link Service): Tạo liên kết duy nhất cho mỗi giao dịch thanh toán.
+Microservice Gửi Thông Báo (Notification Service): Gửi SMS và email thông báo đến khách hàng về phí bảo hiểm và cung cấp liên kết thanh toán.
+Microservice Web Thanh Toán (Payment Web Service): Cung cấp trang web cho khách hàng với khả năng quét QR code để thanh toán.
+Microservice Thanh Toán (Payment Service): Quản lý các giao dịch thanh toán, xác nhận thanh toán và cung cấp mã QR.
+Microservice Quản Lý Người Dùng (User Management Service): Quản lý thông tin người dùng và các dữ liệu liên quan.
+2. Chi tiết các Microservices
+2.1 Microservice Quản lý Phí Bảo Hiểm
+Chức năng: Quản lý các khoản phí bảo hiểm của khách hàng.
+API:
+GET /api/insurance-fees/{userId}: Lấy thông tin phí bảo hiểm của khách hàng theo userId.
+POST /api/insurance-fees: Thêm mới hoặc cập nhật thông tin phí bảo hiểm cho khách hàng.
+PUT /api/insurance-fees/{userId}: Cập nhật phí bảo hiểm cho khách hàng.
+Cơ sở dữ liệu: Cơ sở dữ liệu lưu trữ thông tin phí bảo hiểm của khách hàng.
+2.2 Microservice Tạo Liên Kết Thanh Toán
+Chức năng: Tạo liên kết thanh toán duy nhất cho mỗi giao dịch của khách hàng.
+API:
+POST /api/payment-link: Tạo liên kết thanh toán cho khách hàng.
+Output: Liên kết duy nhất dạng: https://payment.com/{paymentId}.
+Cơ sở dữ liệu: Cơ sở dữ liệu chứa thông tin các liên kết thanh toán đã tạo, trạng thái thanh toán.
+2.3 Microservice Gửi Thông Báo
+Chức năng: Gửi thông báo SMS và email đến khách hàng.
+API:
+POST /api/notifications: Gửi SMS hoặc email cho khách hàng với thông tin phí bảo hiểm và liên kết thanh toán.
+Cơ sở dữ liệu: Không cần lưu trữ lâu dài, chỉ lưu trữ log các thông báo đã gửi.
+2.4 Microservice Web Thanh Toán
+Chức năng: Cung cấp trang web để khách hàng thanh toán và quét mã QR.
+Các bước:
+Khách hàng nhận được liên kết thanh toán duy nhất trong thông báo.
+Khách hàng truy cập vào trang web thanh toán.
+Trang web hiển thị thông tin phí bảo hiểm và mã QR để thanh toán.
+Khách hàng quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử.
+API:
+GET /payment/{paymentId}: Lấy thông tin chi tiết về phí bảo hiểm và mã QR cho liên kết thanh toán.
+Công nghệ: HTML/CSS/JavaScript cho giao diện web, có thể sử dụng các framework như React hoặc Angular để phát triển trang web.
+2.5 Microservice Thanh Toán
+Chức năng: Quản lý giao dịch thanh toán và tạo mã QR cho mỗi giao dịch.
+API:
+POST /api/payment: Xử lý giao dịch thanh toán, xác nhận và tạo mã QR.
+GET /api/payment/{paymentId}/qr-code: Lấy mã QR cho giao dịch thanh toán.
+Cơ sở dữ liệu: Lưu trữ thông tin giao dịch, mã QR và trạng thái thanh toán.
+2.6 Microservice Quản Lý Người Dùng
+Chức năng: Quản lý thông tin người dùng như tên, địa chỉ, email, số điện thoại, v.v.
+API:
+GET /api/users/{userId}: Lấy thông tin người dùng.
+POST /api/users: Thêm người dùng mới.
+PUT /api/users/{userId}: Cập nhật thông tin người dùng.
+Cơ sở dữ liệu: Cơ sở dữ liệu chứa thông tin khách hàng.
+3. Quy trình Hoạt Động
+Khách hàng nhận thông báo:
+
+Microservice Quản lý Phí Bảo Hiểm lấy thông tin phí bảo hiểm của khách hàng.
+Microservice Tạo Liên Kết Thanh Toán tạo một liên kết thanh toán duy nhất cho khách hàng.
+Microservice Gửi Thông Báo gửi SMS hoặc email cho khách hàng với thông tin phí bảo hiểm và liên kết thanh toán.
+Khách hàng truy cập liên kết thanh toán:
+
+Khách hàng nhận được liên kết thanh toán từ thông báo.
+Microservice Web Thanh Toán hiển thị thông tin phí bảo hiểm và mã QR thanh toán.
+Khách hàng thanh toán:
+
+Khách hàng quét mã QR trên trang thanh toán để thanh toán qua ứng dụng ngân hàng hoặc ví điện tử.
+Microservice Thanh Toán xác nhận giao dịch và cập nhật trạng thái thanh toán.
+Cập nhật trạng thái thanh toán:
+
+Microservice Thanh Toán thông báo về kết quả giao dịch cho hệ thống và cập nhật trạng thái.
+4. Công nghệ và Tools
+Microservices: Dùng Docker để container hóa các microservices, Kubernetes để quản lý.
+Giao tiếp giữa các microservices: REST API hoặc gRPC.
+Cơ sở dữ liệu: MySQL, PostgreSQL cho dữ liệu quan hệ, Redis cho caching.
+Gửi Thông Báo: Sử dụng các dịch vụ như Twilio cho SMS, SendGrid cho email.
+QR Code: Sử dụng thư viện như qrcode để tạo mã QR.
+Frontend: React, Angular cho trang web thanh toán.
