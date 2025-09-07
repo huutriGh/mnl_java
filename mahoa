@@ -4,7 +4,11 @@ CREATE OR REPLACE FUNCTION encrypt_text_hex(input_text TEXT)
 RETURNS TEXT AS $$
 BEGIN
   RETURN encode(
-    pgp_sym_encrypt(input_text, 'mysecretkey1234567890123456', 'cipher-algo=aes256'),
+    pgp_sym_encrypt(
+      input_text,
+      'mysecretkey1234567890123456',
+      'cipher-algo=aes256'
+    ),
     'hex'
   );
 END;
@@ -12,13 +16,23 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION decrypt_text_hex(encrypted_hex TEXT)
 RETURNS TEXT AS $$
+DECLARE
+  result TEXT;
 BEGIN
-  RETURN pgp_sym_decrypt(
-    decode(encrypted_hex, 'hex'),
-    'mysecretkey1234567890123456'
-  );
+  BEGIN
+    result := pgp_sym_decrypt(
+      decode(encrypted_hex, 'hex'),
+      'mysecretkey1234567890123456'
+    );
+  EXCEPTION
+    WHEN OTHERS THEN
+      RETURN 'DECRYPTION_ERROR';
+  END;
+
+  RETURN result;
 END;
 $$ LANGUAGE plpgsql;
+
 
 
 2. Oracle – AES + HEX
@@ -30,17 +44,31 @@ RETURN VARCHAR2 IS
   l_encrypted RAW(2000);
 BEGIN
   l_data := UTL_I18N.STRING_TO_RAW(p_text, 'AL32UTF8');
-  l_encrypted := DBMS_CRYPTO.ENCRYPT(l_data, DBMS_CRYPTO.ENCRYPT_AES256 + DBMS_CRYPTO.CHAIN_ECB, l_key);
-  RETURN RAWTOHEX(l_encrypted); -- HEX encode
+  l_encrypted := DBMS_CRYPTO.ENCRYPT(
+    l_data,
+    DBMS_CRYPTO.ENCRYPT_AES256 + DBMS_CRYPTO.CHAIN_ECB,
+    l_key
+  );
+  RETURN RAWTOHEX(l_encrypted);
 END;
 /
 CREATE OR REPLACE FUNCTION decrypt_text_hex(p_encrypted_hex IN VARCHAR2)
 RETURN VARCHAR2 IS
   l_key     RAW(32) := UTL_I18N.STRING_TO_RAW('mysecretkey1234567890123456', 'AL32UTF8');
-  l_raw     RAW(2000) := HEXTORAW(p_encrypted_hex);
+  l_raw     RAW(2000);
   l_output  RAW(2000);
 BEGIN
-  l_output := DBMS_CRYPTO.DECRYPT(l_raw, DBMS_CRYPTO.ENCRYPT_AES256 + DBMS_CRYPTO.CHAIN_ECB, l_key);
-  RETURN UTL_I18N.RAW_TO_CHAR(l_output, 'AL32UTF8');
+  BEGIN
+    l_raw := HEXTORAW(p_encrypted_hex);
+    l_output := DBMS_CRYPTO.DECRYPT(
+      l_raw,
+      DBMS_CRYPTO.ENCRYPT_AES256 + DBMS_CRYPTO.CHAIN_ECB,
+      l_key
+    );
+    RETURN UTL_I18N.RAW_TO_CHAR(l_output, 'AL32UTF8');
+  EXCEPTION
+    WHEN OTHERS THEN
+      RETURN 'DECRYPTION_ERROR';
+  END;
 END;
 /
